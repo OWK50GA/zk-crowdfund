@@ -9,7 +9,7 @@ const fundRaiserFormSchema = z.object({
         fundReason: z.string().min(1, "Cannot be empty"),
         fundRaiserTitle: z.string().min(1, "Cannot be empty"),
         fundRaiserDescription: z.string().min(20, "Has to be long enough"),
-        fundAmount: z.string().min(1, "Must be a number"),
+        fundAmount: z.number(),
         mediaProof: z.custom<FileList | null>((value: any) => {
             if (value && value.length > 0) {
                 return true;
@@ -44,7 +44,7 @@ export const MultiPartForm = ({ step, setCurrentStep }: {
             fundReason: '',
             fundRaiserTitle: '',
             fundRaiserDescription: '',
-            fundAmount: '',
+            fundAmount: 0,
             mediaProof: null
         }
     })
