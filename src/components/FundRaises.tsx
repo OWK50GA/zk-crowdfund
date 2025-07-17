@@ -3,6 +3,7 @@ import { Progress } from "./ui/progress"
 import { FundRaiseCard } from "./FundRaiseCard"
 
 export const FundRaises = () => {
+    
     return (
         <div className="w-[70%] mx-auto flex flex-col gap-9">
             {

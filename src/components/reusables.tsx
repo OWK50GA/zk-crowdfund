@@ -2,18 +2,20 @@ import { Button } from "./ui/button"
 import { Progress } from "./ui/progress"
 
 
-export const AppButton = ({ text, bold, bgColor, textColor, onClick }: {
+export const AppButton = ({ text, bold, bgColor, textColor, onClick, type }: {
     text: string,
     bold?: boolean,
     bgColor: string, // should be hexcode
     textColor: string,
-    onClick?: () => void
+    onClick?: () => void,
+    type: "button" | "submit" | "reset" | undefined
 }) => {
     return (
         <Button 
             className={`rounded-4xl ${bold && 'font-semibold'} w-40 py-4 px-2`}
             style={{ backgroundColor: bgColor, color: textColor }}
             onClick={onClick}
+            type={type}
         >
             {text}
         </Button>
