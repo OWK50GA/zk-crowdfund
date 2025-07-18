@@ -9,7 +9,7 @@ import { LiaImage } from "react-icons/lia"
 import { getContract, prepareContractCall } from "thirdweb"
 import { client } from "@/context/thirdWebClient"
 import { RaiseFiContractAddress } from "@/lib/abi"
-import { sepolia } from "thirdweb/chains"
+import { bscTestnet } from "thirdweb/chains"
 import { useSendTransaction } from "thirdweb/react"
 
 const fundRaiserFormSchema = z.object({
@@ -60,7 +60,7 @@ export const MultiPartForm = ({
 
   const contract = getContract({
     client: client,
-    chain: sepolia,
+    chain: bscTestnet,
     address: RaiseFiContractAddress,
   })
 

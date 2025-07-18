@@ -1,9 +1,17 @@
 import { AppButton, Logo } from "./reusables";
 import { client } from '@/context/thirdWebClient'
 import { ConnectButton } from 'thirdweb/react'
-import { sepolia } from "thirdweb/chains";
+import { bscTestnet } from "thirdweb/chains";
+import { createWallet } from "thirdweb/wallets";
 
 export default function Header() {
+    const wallets = [
+        createWallet("io.metamask"),
+        createWallet("io.zerion.wallet"),
+        createWallet("com.trustwallet.app"),
+        createWallet("com.okex.wallet"),
+        createWallet("com.binance.wallet"),
+    ];
     return (
         <header className="flex bg-[#f5f5f5] h-16 justify-between px-20 py-2 items-center">
             <Logo />
@@ -12,7 +20,7 @@ export default function Header() {
             <ConnectButton 
                 client={client} 
                 accountAbstraction={{
-                    chain: sepolia,
+                    chain: bscTestnet,
                     sponsorGas: true
                 }}
                 connectButton={{
@@ -25,6 +33,12 @@ export default function Header() {
                         fontWeight: 'bold'
                     },
                     label: 'Connect Wallet'
+                }}
+                // wallets={wallets}
+                connectModal={{
+                    showThirdwebBranding: false,
+                    size: "compact",
+                    title: "Connect Wallet",
                 }}
             />
         </header>
