@@ -4,7 +4,7 @@ import Image from "next/image"
 import { Progress } from "./ui/progress"
 import { LabeledProgress } from "./reusables"
 import { usePathname, useRouter } from "next/navigation"
-import { ContractOptions, prepareContractCall, prepareTransaction } from "thirdweb"
+import { ContractOptions, defineChain, prepareContractCall, PreparedTransaction, prepareTransaction, toEther } from "thirdweb"
 import { useActiveAccount, useReadContract, useSendTransaction } from "thirdweb/react"
 import { useMemo, useState } from "react"
 
@@ -37,23 +37,23 @@ export const FundRaiseCard = ({ value, max, contract }: {
 
     const { mutateAsync: donate, isPending, isSuccess, isError } = useSendTransaction();
 
+    // console.log(contract, connectedAddress, donationAmount)
     const transaction = useMemo(() => {
 
-        const isValid = !contract && !connectedAddress && Number(donationAmount) <= 0;
-        if (!isValid) return
+        const isNotValid = !contract && !connectedAddress && Number(donationAmount) < 0;
+        if (isNotValid) return
 
         const call = prepareContractCall({
             contract,
             method: "function fund() external payable",
-            // params: BigInt(Number(donationAmount)),
-            value: BigInt(0)
+            value: BigInt(0),
         })
         return call;
     }, [donationAmount, contract, connectedAddress])
 
     const handleDonate = async () => {
         try {
-            let txHash = await donate(transaction)
+            let txHash = await donate(transaction as PreparedTransaction)
             setIsModalOpen(false)
         } catch (err) {
             console.error(err)

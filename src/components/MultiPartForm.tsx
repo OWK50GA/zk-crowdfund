@@ -6,7 +6,7 @@ import { FormProvider, useForm, useFormContext } from "react-hook-form"
 import z from "zod"
 import { AppButton, ArrowSvg } from "./reusables"
 import { LiaImage } from "react-icons/lia"
-import { getContract, prepareContractCall } from "thirdweb"
+import { getContract, prepareContractCall, PreparedTransaction } from "thirdweb"
 import { client } from "@/context/thirdWebClient"
 import { RaiseFiContractAddress } from "@/lib/abi"
 import { bscTestnet } from "thirdweb/chains"
@@ -105,7 +105,7 @@ export const MultiPartForm = ({
    const { push } = useRouter();
    
    const writeAsync = async () => {
-       const address = await sendTransaction(transaction);
+       const address = await sendTransaction(transaction as PreparedTransaction);
        console.log(address);
        push('/my-fundraise');
    }
