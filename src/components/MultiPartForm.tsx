@@ -1,7 +1,7 @@
 'use client'
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import React, { ChangeEvent, SetStateAction, useState } from "react"
+import React, { ChangeEvent, SetStateAction, useMemo, useState } from "react"
 import { FormProvider, useForm, useFormContext } from "react-hook-form"
 import z from "zod"
 import { AppButton, ArrowSvg } from "./reusables"
@@ -10,7 +10,17 @@ import { getContract, prepareContractCall } from "thirdweb"
 import { client } from "@/context/thirdWebClient"
 import { RaiseFiContractAddress } from "@/lib/abi"
 import { bscTestnet } from "thirdweb/chains"
-import { useSendTransaction } from "thirdweb/react"
+import { useActiveAccount, useSendTransaction } from "thirdweb/react"
+import { useRouter } from "next/navigation"
+import { Loader } from "lucide-react"
+
+type MultiFormData = {
+    fundAmount: string;
+    fundRaiserDescription: string;
+    fundRaiserTitle: string;
+    fundReason: string;
+    fundPeriodInDays: string;
+}
 
 const fundRaiserFormSchema = z.object({
         fundReason: z.string().min(1, "Cannot be empty"),
@@ -58,24 +68,52 @@ export const MultiPartForm = ({
   });
   const { handleSubmit } = methods;
 
+  const account = useActiveAccount();
+  const connectedAddress = account?.address;
+
+  const [formData, setFormData] = useState({
+    fundAmount: '0',
+    fundRaiserDescription: '',
+    fundRaiserTitle: '',
+    fundReason: '',
+    fundPeriodInDays: ''
+  })
+
   const contract = getContract({
     client: client,
     chain: bscTestnet,
     address: RaiseFiContractAddress,
   })
 
-  const { mutate: sendTransaction, isPending } = useSendTransaction();
-  const transaction = prepareContractCall({
+  const { mutateAsync: sendTransaction, isPending, isSuccess, isError, isIdle } = useSendTransaction();
+
+  const transaction = useMemo(() => {
+    if (!contract) return;
+    const isValid = Number(formData.fundAmount) > 0 && formData.fundRaiserDescription.length > 10 && Number(formData.fundPeriodInDays) > 0 && formData.fundRaiserTitle.length > 0 && formData.fundReason.length > 0 && connectedAddress;
+    if (!isValid) return;
+
+    const call = prepareContractCall({
     contract,
-    method: "function createFund(uint256 _targetAmount, uint256 _fundingPeriodInDays)",
-    params: [BigInt(5000), BigInt(5)],
+    method: "function createFund(uint256 _targetAmount, uint256 _fundingPeriodInDays) returns (address)",
+    params: [BigInt(Number(formData.fundAmount)), BigInt(Number(formData.fundPeriodInDays))],
     value: BigInt(0)
    })
+
+   return call;
+  }, [formData, contract, account, connectedAddress])
+
+   const { push } = useRouter();
+   
+   const writeAsync = async () => {
+       const address = await sendTransaction(transaction);
+       console.log(address);
+       push('/my-fundraise');
+   }
 
   const onSubmit = async (values: FundRaiserFormSchema) => {
     // all your step values are in `values` now
     console.log("submitting", values);
-    sendTransaction(transaction);
+    // sendTransaction(transaction);
   };
 
   return (
@@ -88,9 +126,9 @@ export const MultiPartForm = ({
           onSubmit={handleSubmit(onSubmit)}
           className="mt-8 flex flex-col justify-between w-[80%] mx-auto h-[450px] max-h-[450px] overflow-y-scroll border border-gray-300 px-8 py-4 rounded-2xl"
         >
-          {step === 0 && <StepZero />}
-          {step === 1 && <StepOne />}
-          {step === 2 && <StepTwo />}
+          {step === 0 && <StepZero formdata={formData} setFormData={setFormData} />}
+          {step === 1 && <StepOne formdata={formData} setFormData={setFormData} />}
+          {step === 2 && <StepTwo formdata={formData} setFormData={setFormData} />}
 
           {/* 2) navigation / submit */}
           <div className="mt-8 flex justify-between">
@@ -118,9 +156,10 @@ export const MultiPartForm = ({
               <button
                 type="submit"
                 className="bg-[#4E36E9] text-white font-semibold rounded-4xl px-6 py-3"
-                onClick={() => sendTransaction(transaction)}
+                onClick={() => writeAsync()}
               >
-                Start Fundraiser
+
+                {!isPending ? 'Start Fundraiser' : <Loader />}
               </button>
             )}
           </div>
@@ -171,7 +210,10 @@ const Stepper = ({ currentStep, setCurrentStep }: {
     )
 }
 
-export const StepZero = () => {
+export const StepZero = ({formdata, setFormData}: {
+    formdata: MultiFormData,
+    setFormData: React.Dispatch<React.SetStateAction<MultiFormData>>
+}) => {
 
     const { register, formState: { errors, touchedFields } } = useFormContext<FundRaiserFormSchema>();
 
@@ -181,17 +223,27 @@ export const StepZero = () => {
 
              <input 
                 type="text" id="" placeholder="e.g. Medical"
-                className={`outline-none rounded-4xl border-2 border-gray-300 px-4 py-2 w-full ${errors.fundReason ? 'border-[#FF3939]': ''}`}
-                {...register('fundReason')}
+                className={`outline-none rounded-4xl border-2 border-gray-300 px-4 py-2 w-full`}
+                value={formdata.fundReason}
+                onChange={(e) => setFormData((prev) => ({...prev, fundReason: e.target.value}))}
             />
-            {errors.fundReason ? (
-                    <div className="text-sm text-[#FF3939] font-light">{errors.fundReason.message}</div> 
-                ) : null}
+
+            <label className="text-center text-xl font-semibold">What is the funding period in days</label>
+
+             <input 
+                type="number" id="" placeholder=""
+                className={`outline-none rounded-4xl border-2 border-gray-300 px-4 py-2 w-full`}
+                value={formdata.fundPeriodInDays}
+                onChange={(e) => setFormData((prev) => ({...prev, fundPeriodInDays: e.target.value}))}
+            />
         </div>
     )
 }
 
-export const StepOne = () => {
+export const StepOne = ({ formdata, setFormData }: {
+    formdata: MultiFormData,
+    setFormData: React.Dispatch<React.SetStateAction<MultiFormData>>
+}) => {
 
     const { register, formState: { errors, touchedFields } } = useFormContext<FundRaiserFormSchema>();
 
@@ -202,30 +254,36 @@ export const StepOne = () => {
 
                 <input 
                     type="text" placeholder="My fundraiser"
-                    className={`outline-none rounded-4xl border-2 border-gray-300 px-4 py-2 w-full ${errors.fundRaiserTitle ? 'border-[#FF3939]': ''}`}
-                    {...register('fundRaiserTitle')}
+                    className={`outline-none rounded-4xl border-2 border-gray-300 px-4 py-2 w-full`}
+                    value={formdata.fundRaiserTitle}
+                    onChange={(e) => setFormData((prev) => ({...prev, fundRaiserTitle: e.target.value}))}
                 />
-                {errors.fundRaiserTitle ? (
+                {/* {errors.fundRaiserTitle ? (
                     <div className="text-sm text-[#FF3939] font-light">{errors.fundRaiserTitle.message}</div> 
-                ) : null}
+                ) : null} */}
             </div>
 
             <div className="flex flex-col gap-4">
                 <label htmlFor="" className="text-xl font-semibold">Give a detailed explanation of what you need funds for</label>
                 <textarea 
-                    className={`outline-none rounded-2xl border-2 border-gray-300 h-36 px-4 py-2 w-full ${errors.fundRaiserDescription ? 'border-[#FF3939]': ''}`}
-                    {...register('fundRaiserDescription')}
+                    className={`outline-none rounded-2xl border-2 border-gray-300 h-36 px-4 py-2 w-full`}
+                    // {...register('fundRaiserDescription')}
+                    value={formdata.fundRaiserDescription}
+                    onChange={(e) => setFormData((prev) => ({...prev, fundRaiserDescription: e.target.value}))}
                 />
-                {errors.fundRaiserDescription ? (
+                {/* {errors.fundRaiserDescription ? (
                         <div className="text-sm text-[#FF3939] font-light">{errors.fundRaiserDescription.message}</div> 
-                    ) : null}
+                    ) : null} */}
             </div>
 
         </div>
     )
 }
 
-export const StepTwo = () => {
+export const StepTwo = ({ formdata, setFormData }: {
+    formdata: MultiFormData,
+    setFormData: React.Dispatch<React.SetStateAction<MultiFormData>>
+}) => {
 
     const { register, formState: { errors, touchedFields } } = useFormContext<FundRaiserFormSchema>();
 
@@ -288,8 +346,10 @@ export const StepTwo = () => {
 
                 <input 
                     type="text" placeholder="2000000"
-                    className={`outline-none rounded-4xl border-2 border-gray-300 px-4 py-2 w-full ${errors.fundAmount ? 'border-[#FF3939]': ''}`}
-                    {...register('fundAmount', { valueAsNumber: true })}
+                    className={`outline-none rounded-4xl border-2 border-gray-300 px-4 py-2 w-full`}
+                    // {...register('fundAmount', { valueAsNumber: true })}
+                    value={formdata.fundAmount}
+                    onChange={(e) => setFormData((prev) => ({...prev, fundAmount: e.target.value}))}
                 />
             </div>
         </div>

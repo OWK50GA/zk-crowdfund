@@ -1,12 +1,43 @@
 'use client'
 
 import { FundRaiseCard } from "@/components/FundRaiseCard";
+import { client } from "@/context/thirdWebClient";
+import { RaiseFiContractAddress } from "@/lib/abi";
+import { Loader } from "lucide-react";
 import { useState } from "react"
+import { getContract } from "thirdweb";
+import { bscTestnet } from "thirdweb/chains";
+import { useReadContract } from "thirdweb/react";
 
 export default function Donate() {
 
     const [searchValue, setSearchValue] = useState('');
     // Add Search Functionality
+
+    const contract = getContract({
+        client: client,
+        chain: bscTestnet,
+        address: RaiseFiContractAddress,
+    })
+
+    const { data, isLoading } = useReadContract({
+        contract,
+        method: "function getActiveFunds() returns (address[])",
+    })
+
+    console.log(data)
+
+    const fundraiseContracts = data?.map((datum) => {
+        const contract = getContract({
+            client,
+            chain: bscTestnet,
+            address: datum,
+        });
+
+        return contract
+    })
+
+    console.log(fundraiseContracts);
 
     return (
         <div className="mt-10 py-10 w-[70%] mx-auto flex flex-col gap-5">
@@ -24,11 +55,13 @@ export default function Donate() {
             </div>
 
             {
-                Array.from({ length: 3 }).map((_, index) => {
+                fundraiseContracts? fundraiseContracts.map((contract, index) => {
                     return (
-                        <FundRaiseCard key={index} value={40} max={120} />
+                        <FundRaiseCard key={index} value={40} max={120} contract={contract}/>
                     )
-                })
+                }) : (
+                    <Loader />
+                )
             }
         </div>
     )
