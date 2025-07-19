@@ -1,8 +1,11 @@
+'use client'
+
 import { AppButton, Logo } from "./reusables";
 import { client } from '@/context/thirdWebClient'
 import { ConnectButton } from 'thirdweb/react'
 import { bscTestnet } from "thirdweb/chains";
 import { createWallet } from "thirdweb/wallets";
+import Link from "next/link";
 
 export default function Header() {
     const wallets = [
@@ -14,7 +17,11 @@ export default function Header() {
     ];
     return (
         <header className="flex bg-[#f5f5f5] h-16 justify-between px-20 py-2 items-center">
-            <Logo />
+            <Link
+                href="/"
+            >
+                <Logo />
+            </Link>
 
             {/* <AppButton text="Connect Wallet" bold bgColor="#4E36E9" textColor="#fff"/> */}
             <ConnectButton 

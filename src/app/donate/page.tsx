@@ -25,8 +25,6 @@ export default function Donate() {
         method: "function getActiveFunds() returns (address[])",
     })
 
-    console.log(data)
-
     const fundraiseContracts = data?.map((datum) => {
         const contract = getContract({
             client,
@@ -36,8 +34,6 @@ export default function Donate() {
 
         return contract
     })
-
-    console.log(fundraiseContracts);
 
     return (
         <div className="mt-10 py-10 w-[70%] mx-auto flex flex-col gap-5">

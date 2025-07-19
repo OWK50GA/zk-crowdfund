@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { ContractOptions, defineChain, prepareContractCall, PreparedTransaction, prepareTransaction, toEther } from "thirdweb"
 import { useActiveAccount, useReadContract, useSendTransaction } from "thirdweb/react"
 import { useMemo, useState } from "react"
+import { parseEther } from "ethers"
 
 export const FundRaiseCard = ({ value, max, contract }: {
     value: number,
@@ -15,10 +16,10 @@ export const FundRaiseCard = ({ value, max, contract }: {
 }) => {
     const pathname = usePathname();
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [donationAmount, setDonationAmount] = useState('')
+    const [donationAmount, setDonationAmount] = useState('0')
     const [error, setError] = useState('')
 
-    const { data, isLoading } = useReadContract({
+    const { data } = useReadContract({
         contract,
         method: "function getDetails() external view returns (address, uint256, uint256, uint256, bool)",
     })
@@ -39,14 +40,15 @@ export const FundRaiseCard = ({ value, max, contract }: {
 
     // console.log(contract, connectedAddress, donationAmount)
     const transaction = useMemo(() => {
+        if (!contract || !connectedAddress || !donationAmount) return;
 
-        const isNotValid = !contract && !connectedAddress && Number(donationAmount) < 0;
-        if (isNotValid) return
+        const amount = Number(donationAmount);
+        if (isNaN(amount) || amount <= 0) return;
 
         const call = prepareContractCall({
             contract,
             method: "function fund() external payable",
-            value: BigInt(0),
+            value: BigInt(parseEther(donationAmount)),
         })
         return call;
     }, [donationAmount, contract, connectedAddress])

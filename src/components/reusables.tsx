@@ -12,7 +12,7 @@ export const AppButton = ({ text, bold, bgColor, textColor, onClick, type }: {
 }) => {
     return (
         <Button 
-            className={`rounded-4xl ${bold && 'font-semibold'} w-40 py-4 px-2`}
+            className={`rounded-4xl ${bold && 'font-semibold cursor-pointer'} w-40 py-4 px-2`}
             style={{ backgroundColor: bgColor, color: textColor }}
             onClick={onClick}
             type={type}
@@ -38,7 +38,7 @@ export const CurveSvg = () => (
 
 export const Logo = () => {
     return (
-        <div className="font-bold text-2xl">
+        <div className="font-bold text-2xl cursor-pointer">
             <span className="text-[#4E36E9]">Raise</span>
             <span className="text-green-300">Fi</span>
         </div>

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { AppButton } from "./reusables";
+import Link from "next/link";
 
 export default function Hero1() {
     return (
@@ -19,9 +20,16 @@ export default function Hero1() {
             </p>
 
             <div className="w-full flex justify-center gap-10 items-center my-5">
-                <AppButton text="Start Fundraiser" bgColor="#000" textColor="#78EC95" bold />
-
-                <AppButton text="Donate" bgColor="#4E36E9" textColor="#fff" bold />
+                <Link
+                    href="/fundraiser"
+                >
+                    <AppButton text="Start Fundraiser" bgColor="#000" textColor="#78EC95" bold type="button" />
+                </Link>
+                <Link
+                    href="/donate"
+                >
+                    <AppButton text="Donate" bgColor="#4E36E9" textColor="#fff" bold type="button" />
+                </Link>
             </div>
 
             <div className="flex gap-6 justify-center mt-20 text-start">
